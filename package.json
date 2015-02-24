@@ -1,0 +1,29 @@
+{
+  "name": "bittodo",
+  "description": "",
+  "version": "0.0.0",
+  "homepage": "https://github.com/dominictarr/bittodo",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/dominictarr/bittodo.git"
+  },
+  "dependencies": {
+    "ssb-msgs": "~2.0.0",
+    "ssb-config": "~1.0.0",
+    "ssb-keys": "~0.4.1",
+    "explain-error": "~1.0.1",
+    "pull-stream": "~2.26.0",
+    "pull-paramap": "~1.1.1",
+    "pull-stringify": "~1.2.2",
+    "minimist": "~1.1.0"
+  },
+  "devDependencies": {
+    "tape": "~3.5.0"
+  },
+  "scripts": {
+    "prepublish": "npm ls &&  npm test",
+    "test": "set -e; for t in test/*.js; do node $t; done"
+  },
+  "author": "Dominic Tarr <dominic.tarr@gmail.com> (http://dominictarr.com)",
+  "license": "MIT"
+}
