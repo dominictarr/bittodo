@@ -14,9 +14,6 @@ exports.reduce = function (state, msg) {
     if(!~keywords.indexOf(k))
       state[k] = clone(msg.content[k]) || state[k]
 
-  if(!state.assigned)
-    state.assigned = [{feed: msg.author}]
-
   return state
 }
 
@@ -49,7 +46,7 @@ exports.apply = function (msgs, reduce) {
     state = reduce(state, msg.value)
     var _updates = toArray(msg.value.content[rel])
   })
-  console.log(heads(msgs, 'branch'))
+
   return {
     key: msgs[0].key,
     value: state,

@@ -10,7 +10,7 @@ var pull = require('pull-stream')
 var paramap = require('pull-paramap')
 var stringify = require('pull-stringify')
 var minimist = require('minimist')
-
+var cont = require('cont')
 
 var manifestFile = path.join(config.path, 'manifest.json')
 
@@ -84,7 +84,7 @@ function tasks (id) {
 
   return pull(
     rpc.query([
-      {path: ['author'], eq: id},
+      {path: ['content', 'assigned', true, 'feed'], eq: id},
       {path: ['content', 'type'], eq: 'task'},
     ]),
     pull.filter(function (msg) {
@@ -178,8 +178,32 @@ function get (key, cb) {
     msg = {key: key, value: msg}
     hydrate(msg, cb)
   })
-
 }
+
+
+var blockedBy = cont(function (key, cb) {
+
+  var isOpen = cont(function isOpen (key, cb) {
+    key = key.msg || key
+    get(key, function (err, task) {
+      if(err) cb(err)
+      cb(null, task.value.state === 'open' ? task : null)
+    })
+  })
+
+  get(key, function (err, task) {
+    if (err) return cb(err)
+
+    if(task.value.state === 'done' || !task.value.depends)
+      return cb(null, [])
+    else
+      cont.para(task.value.depends.map(function (key) {
+        return isOpen(key)
+      })) (function (err, ary) {
+        cb(null, ary.filter(Boolean))
+      })
+  })
+})
 
 var opts = minimist(process.argv.slice(2))
 var cmd = opts._.shift()
@@ -203,9 +227,24 @@ else if(cmd === 'amend') {
   })
 }
 
+else if(cmd === 'done') {
+
+  get(arg, function (err, task) {
+    if(task.value.state === 'done')
+      throw new Error('task:' + task.key + ' is already done!')
+
+    var _task = amendTask(keys.id, task, {state: 'done'})
+    rpc.add(_task, function (err, _msg) {
+      console.log(JSON.stringify(_msg, null, 2))
+      process.exit()
+    })
+  })
+
+}
+
 else if(cmd === 'list') {
   pull(
-    tasks(keys.id),
+    tasks(arg || keys.id),
     pull.drain(function (msg) {
       console.log(JSON.stringify(msg, null, 2) + '\n')
     }, function (err) {
@@ -223,6 +262,86 @@ else if(cmd === 'get') {
     process.exit()
   })
 }
+
+else if(cmd === 'blockedBy') {
+  blockedBy(arg, function (err, blocked) {
+    if(err) throw err
+    console.log(JSON.stringify(blocked, null, 2))
+    process.exit()
+  })
+}
+
+else if(cmd === 'actionable') {
+
+  pull(
+    tasks(arg || keys.id),
+    pull.filter(function (task) {
+      return task.value.state === 'open'
+    }),
+    paramap(function (task, cb) {
+      blockedBy(task.key, function (err, tasks) {
+        cb(err, !tasks.length ? task : null)
+      })
+    }),
+    pull.filter(),
+    pull.drain(function (msg) {
+      console.log(JSON.stringify(msg, null, 2) + '\n')
+    }, function (err) {
+      if(err) throw err
+      process.exit()
+    })
+  )
+}
+
+
+else if(cmd === 'unactionable') {
+
+  pull(
+    tasks(arg || keys.id),
+    pull.filter(function (task) {
+      return task.value.state === 'open'
+    }),
+    paramap(function (task, cb) {
+      blockedBy(task.key, function (err, tasks) {
+        if(!tasks.length) return cb(err)
+        
+        task.blockedBy = tasks.map(function (t) {
+          return {msg: t.key}
+        })
+        cb(err, task)
+      })
+    }),
+    pull.filter(),
+    pull.drain(function (msg) {
+      console.log(JSON.stringify(msg, null, 2) + '\n')
+    }, function (err) {
+      if(err) throw err
+      process.exit()
+    })
+  )
+}
+
+else if(cmd === 'blockers') {
+  pull(
+    tasks(arg || keys.id),
+    pull.filter(function (task) {
+      return task.value.state === 'open'
+    }),
+    paramap(function (task, cb) {
+      blockedBy(task.key, cb)
+    }),
+    pull.flatten(),
+    pull.unique('key'),
+    pull.drain(function (msg) {
+      console.log(JSON.stringify(msg, null, 2) + '\n')
+    }, function (err) {
+      if(err) throw err
+      process.exit()
+    })
+  )
+
+}
+
 
 else {
   console.error('bittodo cmd {opts}')
