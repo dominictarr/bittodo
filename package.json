@@ -16,7 +16,8 @@
     "pull-paramap": "~1.1.1",
     "pull-stringify": "~1.2.2",
     "minimist": "~1.1.0",
-    "cont": "~1.0.1"
+    "cont": "~1.0.1",
+    "scuttlebot": "2.3.2"
   },
   "devDependencies": {
     "tape": "~3.5.0"
