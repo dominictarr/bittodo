@@ -15,7 +15,8 @@
     "pull-stream": "~2.26.0",
     "pull-paramap": "~1.1.1",
     "pull-stringify": "~1.2.2",
-    "minimist": "~1.1.0"
+    "minimist": "~1.1.0",
+    "cont": "~1.0.1"
   },
   "devDependencies": {
     "tape": "~3.5.0"
