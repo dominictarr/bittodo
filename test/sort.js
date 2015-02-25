@@ -20,6 +20,9 @@ var tasks = [
     "hash": "blake2s",
     "content": {
       "type": "task",
+      "assigned": [{
+          "feed": "wuDDnMxVtk8U9hrueDj/T0itgp5HJZ4ZDEJodTyoMdg=.blake2"
+        }],
       "text": "create tests for concurrent task updates",
       "state": "open"
     },
@@ -36,19 +39,13 @@ var tasks = [
     "timestamp": 1423698055472,
     "hash": "blake2s",
     "content": {
-      "type": "task",
-      "task": {
+      "type": "_task",
+      "root": {
         "msg": "IDtUUFgMwxHVyF0+3QO3Z7a0LFZFyIDhTixAg422w+Q=.blake2s",
-        "rel": "task"
       },
-      "updates": {
-        "msg": "IDtUUFgMwxHVyF0+3QO3Z7a0LFZFyIDhTixAg422w+Q=.blake2s",
-        "rel": "updates"
-      },
-      "depends": {
+      "depends": [{
         "msg": "KZFrAFHwzEZrhX81KdJU1t73V4XqoLBs3eG/UD/GRVg=.blake2s",
-        "rel": "depends"
-      }
+      }]
     },
     "signature": "MrjcLvJLJeo12e+KxmbVbPg7q0z1e2FVN9p9PBvpQ+iqCneM1/3ByHMmw2jiU65hCvnJ0FK4f4nwJdljmfRVXg==.blake2s.k256"
   }
@@ -63,15 +60,13 @@ var tasks = [
     "timestamp": 1423698127304,
     "hash": "blake2s",
     "content": {
-      "type": "task",
-      "task": {
-        "msg": "IDtUUFgMwxHVyF0+3QO3Z7a0LFZFyIDhTixAg422w+Q=.blake2s",
-        "rel": "task"
+      "type": "_task",
+      root: {
+        msg: "IDtUUFgMwxHVyF0+3QO3Z7a0LFZFyIDhTixAg422w+Q=.blake2s",
       },
-      "updates": {
-        "msg": "IDtUUFgMwxHVyF0+3QO3Z7a0LFZFyIDhTixAg422w+Q=.blake2s",
-        "rel": "updates"
-      },
+      branch: [{
+        msg: "IDtUUFgMwxHVyF0+3QO3Z7a0LFZFyIDhTixAg422w+Q=.blake2s",
+      }],
       "estimate": "2h"
     },
     "signature": "5ePyoZwSPxjyIiqJ/hePspwrerGauHFSmx5RZ95waIS5t1dFuEo86/71YCtPtGxYL+AVk9AJf90L8iqTuySWKA==.blake2s.k256"
@@ -87,20 +82,13 @@ var tasks = [
     "timestamp": 1423701086044,
     "hash": "blake2s",
     "content": {
-      "type": "task",
-      "task": {
-        "msg": "IDtUUFgMwxHVyF0+3QO3Z7a0LFZFyIDhTixAg422w+Q=.blake2s",
-        "rel": "task"
+      "type": "_task",
+      root: {
+        msg: "IDtUUFgMwxHVyF0+3QO3Z7a0LFZFyIDhTixAg422w+Q=.blake2s"
       },
-      "updates": [
-        {
-          "msg": "ajOY+MqAzIBY0e28qWgOoeqoXd/QAg2nIhiet9GRsUI=.blake2s",
-          "rel": "updates"
-        },
-        {
-          "msg": "OJl+OUQa919zzmTEWCtn6qJ+RlOpuDHdhs9w4BigTBM=.blake2s",
-          "rel": "updates"
-        }
+      "branch": [
+        { "msg": "ajOY+MqAzIBY0e28qWgOoeqoXd/QAg2nIhiet9GRsUI=.blake2s" },
+        { "msg": "OJl+OUQa919zzmTEWCtn6qJ+RlOpuDHdhs9w4BigTBM=.blake2s" }
       ],
       "state": "done"
     },
@@ -124,12 +112,12 @@ function randomSort(ary) {
 }
 
 tape('simple', function (t) {
-  t.deepEqual(sort(tasks, 'updates'), tasks)
-  t.deepEqual(sort(randomSort(tasks), 'updates').map(toKey), sorted)
-  t.deepEqual(sort(randomSort(tasks), 'updates').map(toKey), sorted)
-  t.deepEqual(sort(randomSort(tasks), 'updates').map(toKey), sorted)
-  t.deepEqual(sort(randomSort(tasks), 'updates').map(toKey), sorted)
-  t.deepEqual(sort(randomSort(tasks), 'updates').map(toKey), sorted)
+  t.deepEqual(sort(tasks, 'branch'), tasks)
+  t.deepEqual(sort(randomSort(tasks), 'branch').map(toKey), sorted)
+  t.deepEqual(sort(randomSort(tasks), 'branch').map(toKey), sorted)
+  t.deepEqual(sort(randomSort(tasks), 'branch').map(toKey), sorted)
+  t.deepEqual(sort(randomSort(tasks), 'branch').map(toKey), sorted)
+  t.deepEqual(sort(randomSort(tasks), 'branch').map(toKey), sorted)
 
   t.end()
 
@@ -139,27 +127,27 @@ tape('apply', function (t) {
 
   t.deepEqual(
     BitTodo.apply(tasks, BitTodo.reduce), {
-    "text": "create tests for concurrent task updates",
-    "state": "done",
-    "assigned": [
-      {
-        "feed": "wuDDnMxVtk8U9hrueDj/T0itgp5HJZ4ZDEJodTyoMdg=.blake2s",
-        "rel": "assigned"
-      }
-    ],
-    "task": {
-      "msg": "IDtUUFgMwxHVyF0+3QO3Z7a0LFZFyIDhTixAg422w+Q=.blake2s",
-      "rel": "task"
+
+      key: tasks[0].key,
+
+      value: {
+      "text": "create tests for concurrent task updates",
+      "state": "done",
+      created: tasks[0].value.timestamp,
+      updated: tasks[3].value.timestamp,
+
+      "assigned": [{
+          "feed": "wuDDnMxVtk8U9hrueDj/T0itgp5HJZ4ZDEJodTyoMdg=.blake2"
+        }],
+
+      "depends": [{
+        "msg": "KZFrAFHwzEZrhX81KdJU1t73V4XqoLBs3eG/UD/GRVg=.blake2s"
+      }],
+      "estimate": "2h",
     },
-    "depends": {
-      "msg": "KZFrAFHwzEZrhX81KdJU1t73V4XqoLBs3eG/UD/GRVg=.blake2s",
-      "rel": "depends"
-    },
-    "estimate": "2h",
-    "updates": [
+    leaves: [
       {
         "msg": "L1iNExdBkpjz0W+hNok2js5bLJWUvQ5NGuueENyYrk4=.blake2s",
-        "rel": "updates"
       }
     ]
   })
