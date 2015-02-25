@@ -10,6 +10,10 @@ exports.reduce = function (state, msg) {
 
   if(!state) state = {}
 
+  if(!state.created) state.created = msg.timestamp
+
+  state.updated = Math.max(state.updated || 0, msg.timestamp)
+
   for(var k in msg.content)
     if(!~keywords.indexOf(k))
       state[k] = clone(msg.content[k]) || state[k]
