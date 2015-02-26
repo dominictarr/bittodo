@@ -37,22 +37,26 @@ rpc.auth(ssbKeys.signObj(keys, {
     if(err) throw err
   })
 
+function isEmpty (obj) {
+  for(var k in obj) return false
+  return true
+}
+
 
 var opts = minimist(process.argv.slice(2))
 var cmd = opts._.shift()
 var arg = opts._.shift()
 delete opts._
 
-var bittodo = require('./api')(rpc)
+var bittodo = require('./api')(rpc, keys.id)
 
 if(bittodo[cmd]) {
-  console.log(cmd, arg, opts)
-  var maybeStream = bittodo[cmd](arg || opts, function (err, out) {
+  var maybeStream = bittodo[cmd](arg || (isEmpty(opts) ? null : opts), function (err, out) {
     if(err) throw err
     console.log(JSON.stringify(_msg, null, 2))
     process.exit()
   })
-  console.log(maybeStream)
+
   if(maybeStream)
     pull(
       maybeStream,

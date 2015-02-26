@@ -106,9 +106,16 @@ function amendTask (id, task, opts) {
 }
 
 
-module.exports = function (rpc) {
+module.exports = function (rpc, id) {
+
+
+  //if rpc is actually a sbot instance, it will have .feed property.
+  if(!id) id = rpc.feed.id
 
   function hydrate (msg, cb) {
+
+    if(!msg.key)
+      return cb(new Error('msg should be in {key, value: msg} form'))
     pull(
       rpc.query([
                          // v change to "object" ? or "dataset" ?
@@ -125,7 +132,6 @@ module.exports = function (rpc) {
   }
 
   function tasks (id) {
-
     return pull(
       rpc.query([
         {path: ['content', 'assigned', true, 'feed'], eq: id},
@@ -173,37 +179,24 @@ module.exports = function (rpc) {
 
   return {
     create: function (opts, cb) {
-      rpc.whoami(function (err, me) {
-        if(err) return cb(err)
-        rpc.add(createTask(me.id, opts), cb)
-      })
+      rpc.add(createTask(id, opts), cb)
     },
     update: function (opts, cb) {
-      rpc.whoami(function (err, me) {
+      get(opts.root, function (err, task) {
         if(err) return cb(err)
-        rpc.get(opts.root, function (err, msg) {
-          if(err) return cb(err)
-          rpc.add(amendTask(rpc.feed.id, opts), cb)
-        })
+        rpc.add(amendTask(id, task, opts), cb)
       })
     },
     get: function (key, cb) {
-      rpc.get(key, function (err, msg) {
-        if(err) return cb(err)
-        hydrate(msg, cb)
-      })
+      get(key, cb)
     },
-    list: function (id) {
-      var deferred = defer.source()
-      rpc.whoami(function (err, me) {
-        deferred.resolve(tasks(me.id))
-      })
-      return deferred
+    list: function (_id) {
+      return tasks(_id || id)
     },
     blockedBy: blockedBy,
-    actionable: function (id) {
+    actionable: function (_id) {
       return pull(
-        tasks(id),
+        tasks(_id || id),
         pull.filter(function (task) {
           return task.value.state === 'open'
         }),
@@ -215,9 +208,9 @@ module.exports = function (rpc) {
         pull.filter()
       )
     },
-    blocked:  function (id) {
+    blocked:  function (_id) {
       return pull(
-        tasks(arg || keys.id),
+        tasks(_id || id),
         pull.filter(function (task) {
           return task.value.state === 'open'
         }),
@@ -234,9 +227,9 @@ module.exports = function (rpc) {
       )
     },
 
-    blockers: function (id) {
+    blockers: function (_id) {
       return pull(
-        tasks(arg || keys.id),
+        tasks(_id || id),
         pull.filter(function (task) {
           return task.value.state === 'open'
         }),
