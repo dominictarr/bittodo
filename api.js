@@ -34,6 +34,7 @@ function toArray(str) {
 }
 
 function toMsg (hash) {
+  if(hash.msg) return hash
   return {msg: hash}
 }
 
@@ -148,7 +149,8 @@ module.exports = function (rpc, id) {
   function get (key, cb) {
     rpc.get(key, function (err, msg) {
       if(err) throw err
-      msg = {key: key, value: msg}
+      if(!msg.key)
+        msg = {key: key, value: msg}
       hydrate(msg, cb)
     })
   }
