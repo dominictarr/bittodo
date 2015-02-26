@@ -17,7 +17,8 @@
     "pull-stringify": "~1.2.2",
     "minimist": "~1.1.0",
     "cont": "~1.0.1",
-    "scuttlebot": "2.3.2"
+    "scuttlebot": "2.3.2",
+    "pull-defer": "~0.1.1"
   },
   "devDependencies": {
     "tape": "~3.5.0"
