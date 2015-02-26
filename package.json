@@ -1,6 +1,6 @@
 {
   "name": "bittodo",
-  "description": "",
+  "description": "worlds first cryptographically secure todo list app",
   "version": "0.0.0",
   "homepage": "https://github.com/dominictarr/bittodo",
   "repository": {
@@ -24,7 +24,6 @@
     "tape": "~3.5.0"
   },
   "scripts": {
-    "prepublish": "npm ls &&  npm test",
     "test": "set -e; for t in test/*.js; do node $t; done"
   },
   "author": "Dominic Tarr <dominic.tarr@gmail.com> (http://dominictarr.com)",
