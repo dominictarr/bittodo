@@ -10,6 +10,7 @@ var pull = require('pull-stream')
 
 var btd = BitTodo(ssb)
 
+
 tape('create and get a task', function (t) {
 
   btd.create({
@@ -45,5 +46,58 @@ tape('create and get a task', function (t) {
       })
     )
   })
+})
+
+
+tape('add and remove dependency links', function (t) {
+
+  btd.create({
+    text: 'dependee task'
+  }, function (err, msg) {
+    btd.create({
+      text: 'dependant task',
+      depends: [{msg: msg.key}]
+    }, function (err, msg2) {
+      btd.get(msg2.key, function (err, task) {
+        t.deepEqual(task.value.depends, 
+          [{msg: msg.key}]
+        )
+        btd.update({root: msg2.key, depends: [
+          {msg: msg.key, retract: true}
+        ]}, function (err) {
+          btd.get(msg2.key, function (err, task) {
+            t.deepEqual(task.value.depends, [])
+            t.end()
+          })
+        })
+      })
+    })
+
+  })
+
+})
+
+
+tape('cannot depend on the same task twice', function (t) {
+
+  btd.create({
+    text: 'dependee task'
+  }, function (err, msg) {
+    btd.create({
+      text: 'dependant task',
+      depends: [{msg: msg.key}]
+    }, function (err, msg2) {
+      btd.update({root: msg2.key, depends: [
+        {msg: msg.key}
+      ]}, function (err) {
+        btd.get(msg2.key, function (err, task) {
+          t.deepEqual(task.value.depends, [{msg: msg.key}])
+          t.end()
+        })
+      })
+    })
+
+  })
+
 })
 
