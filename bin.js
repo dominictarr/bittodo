@@ -71,9 +71,9 @@ if(bittodo[cmd]) {
 
 else if(cmd === 'done') {
 
-  bittodo.update({state: 'done', root: arg}, function (err, cb) {
+  bittodo.update({state: 'done', root: arg}, function (err, msg) {
     if(err) throw err
-    console.log(JSON.stringify(_msg, null, 2))
+    console.log(JSON.stringify(msg, null, 2))
     process.exit()
   })
 
