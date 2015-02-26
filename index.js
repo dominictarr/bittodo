@@ -1,5 +1,7 @@
 var sortBy = require('./sort')
 
+var isArray = Array.isArray
+
 var keywords = ['type', 'branch', 'root']
 
 function clone (e) {
@@ -15,9 +17,25 @@ exports.reduce = function (state, msg) {
   state.updated = Math.max(state.updated || 0, msg.timestamp)
 
   for(var k in msg.content)
-    if(!~keywords.indexOf(k))
-      state[k] = clone(msg.content[k]) || state[k]
+    if(!~keywords.indexOf(k)) {
 
+      if(isArray(state[k])) {
+        var ary = toArray(msg.content[k])
+        var o = {}
+        state[k].forEach(function (link) {
+          o[link.msg || link.feed] = link
+        })
+        toArray(msg.content[k]).forEach(function (link) {
+          if(link.retract) delete o[link.msg || link.feed]
+          else             o[link.msg || link.feed] = link
+        })
+        state[k] = Object.keys(o).sort().map(function (key) {
+          return o[key]
+        })
+      }
+      else
+        state[k] = clone(msg.content[k]) || state[k]
+    }
   return state
 }
 
