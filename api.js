@@ -113,12 +113,24 @@ module.exports = function (rpc, id) {
   //if rpc is actually a sbot instance, it will have .feed property.
   if(!id) id = rpc.feed.id
 
+  var query = rpc.query || rpc.ssb.query
+  var add = rpc.add || rpc.ssb.add
+
+  function get (key, cb) {
+    (rpc['get'] || rpc.ssb['get'])(key, function (err, msg) {
+      if(err) throw err
+      if(!msg.key)
+        msg = {key: key, value: msg}
+      hydrate(msg, cb)
+    })
+  }
+
   function hydrate (msg, cb) {
 
     if(!msg.key)
       return cb(new Error('msg should be in {key, value: msg} form'))
     pull(
-      rpc.query([
+      query([
                          // v change to "object" ? or "dataset" ?
         {path: ['content', 'root', 'msg'], eq: msg.key},
                                       // v change to taskMod
@@ -134,7 +146,7 @@ module.exports = function (rpc, id) {
 
   function tasks (id) {
     return pull(
-      rpc.query([
+      query([
         {path: ['content', 'assigned', true, 'feed'], eq: id},
         {path: ['content', 'type'], eq: 'task'},
       ]),
@@ -144,15 +156,6 @@ module.exports = function (rpc, id) {
       paramap(hydrate)
     )
 
-  }
-
-  function get (key, cb) {
-    rpc.get(key, function (err, msg) {
-      if(err) throw err
-      if(!msg.key)
-        msg = {key: key, value: msg}
-      hydrate(msg, cb)
-    })
   }
 
   var blockedBy = cont(function (key, cb) {
@@ -181,12 +184,12 @@ module.exports = function (rpc, id) {
 
   return {
     create: function (opts, cb) {
-      rpc.add(createTask(id, opts), cb)
+      add(createTask(id, opts), cb)
     },
     update: function (opts, cb) {
       get(opts.root, function (err, task) {
         if(err) return cb(err)
-        rpc.add(amendTask(id, task, opts), cb)
+        add(amendTask(id, task, opts), cb)
       })
     },
     get: function (key, cb) {
