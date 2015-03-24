@@ -46,6 +46,24 @@ function sort (states) {
   return sortBy(states, 'branch')
 }
 
+function merge (a, b) {
+  return {
+    depends: mergeLinks(a.depends, b.depends),
+    state: b.state || a.state,
+    text: b.text || a.text,
+    assigned: mergeLinks(a.assigned, b.assigned)
+  }
+}
+
+function validate (a, state) {
+  return (
+    (a.depends && msgLinks(a.depends)) &&
+    (!a.state || a.state === 'open' || a.state == 'close') &&
+    feedLinks(a.assigned) &&
+    contains(state.assigned, a.author)
+  )
+}
+
 function toArray(ary) {
   return clone(
     Array.isArray(ary) ? ary
