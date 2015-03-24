@@ -12,7 +12,7 @@ var minimist = require('minimist')
 var cont = require('cont')
 
 var keys = ssbKeys.loadOrCreateSync(config)
-var client = require('ssb-client') (keys, config)
+var client = require('ssb-client') (config)
 var rpc = client
 
 function abortIf(err) {
